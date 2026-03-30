@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sprite3 动画</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #f9f2ff 0%, #eef5ff 100%);
+            color: #2d2d2d;
+        }
+
+        .card {
+            width: min(100%, 560px);
+            padding: 24px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 12px 30px rgba(91, 120, 167, 0.12);
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .meta {
+            margin-bottom: 18px;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 260px;
+            padding: 16px;
+            border: 1px solid #edf2f7;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .sprite {
+            width: 204.8px;
+            height: 204.8px;
+            background-image: url('./sprite3.png');
+            background-repeat: no-repeat;
+            background-position: 0 0;
+            background-size: 1024px 1024px;
+        }
+
+        .frame-info {
+            margin-top: 14px;
+            font-size: 14px;
+            color: #4b5563;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background: #6c7cff;
+            cursor: pointer;
+            transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
+        }
+
+        button:hover:enabled {
+            transform: translateY(-1px);
+            background: #5a6bf3;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #f08bd6;
+        }
+
+        .button-secondary:hover:enabled {
+            background: #e26ec5;
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>sprite3 动画</h1>
+        <p class="meta">25 帧 · 5 列 × 5 行 · 80ms / 帧</p>
+
+        <div class="stage">
+            <div class="sprite" id="sprite"></div>
+        </div>
+
+        <p class="frame-info">当前帧：<span id="frameNumber">1</span> / 25</p>
+
+        <div class="controls">
+            <button type="button" id="playButton">播放</button>
+            <button type="button" id="pauseButton" class="button-secondary">暂停</button>
+            <button type="button" id="resetButton">重置</button>
+        </div>
+    </main>
+
+    <script>
+        const config = {
+            cols: 5,
+            rows: 5,
+            frameWidth: 1024 / 5,
+            frameHeight: 1024 / 5,
+            totalFrames: 25,
+            frameDuration: 80
+        };
+
+        let currentFrame = 0;
+        let isPlaying = false;
+        let timerId = null;
+
+        const sprite = document.getElementById('sprite');
+        const frameNumber = document.getElementById('frameNumber');
+        const playButton = document.getElementById('playButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resetButton = document.getElementById('resetButton');
+
+        function getBackgroundPosition(frameIndex) {
+            const col = frameIndex % config.cols;
+            const row = Math.floor(frameIndex / config.cols);
+            const x = -(col * config.frameWidth);
+            const y = -(row * config.frameHeight);
+            return `${x}px ${y}px`;
+        }
+
+        function renderFrame(frameIndex) {
+            sprite.style.backgroundPosition = getBackgroundPosition(frameIndex);
+            frameNumber.textContent = String(frameIndex + 1);
+        }
+
+        function syncButtons() {
+            playButton.disabled = isPlaying;
+            pauseButton.disabled = !isPlaying;
+        }
+
+        function tick() {
+            renderFrame(currentFrame);
+            currentFrame = (currentFrame + 1) % config.totalFrames;
+
+            if (!isPlaying) {
+                return;
+            }
+
+            timerId = window.setTimeout(tick, config.frameDuration);
+        }
+
+        function play() {
+            if (isPlaying) {
+                return;
+            }
+
+            isPlaying = true;
+            syncButtons();
+            tick();
+        }
+
+        function pause() {
+            if (!isPlaying) {
+                return;
+            }
+
+            isPlaying = false;
+            syncButtons();
+
+            if (timerId !== null) {
+                window.clearTimeout(timerId);
+                timerId = null;
+            }
+        }
+
+        function reset() {
+            pause();
+            currentFrame = 0;
+            renderFrame(0);
+        }
+
+        playButton.addEventListener('click', play);
+        pauseButton.addEventListener('click', pause);
+        resetButton.addEventListener('click', reset);
+
+        renderFrame(0);
+        play();
+    </script>
+</body>
+</html>
